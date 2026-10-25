@@ -1,2 +1,15 @@
-<h1>Xin chào!</h1>
-<p>Đây là trang web đầu tiên của mình.</p>
+<h1>Sản phẩm của mình</h1>
+
+<label for="quantity">Số lượng:</label>
+<input id="quantity" type="number" value="10" min="0">
+
+<p>Còn <span id="stock">10</span> sản phẩm</p>
+
+<script>
+  const quantityInput = document.querySelector("#quantity");
+  const stockText = document.querySelector("#stock");
+
+  quantityInput.addEventListener("input", () => {
+    stockText.textContent = quantityInput.value || 0;
+  });
+</script>
