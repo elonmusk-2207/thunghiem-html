@@ -1,15 +1,521 @@
-<h1>Sản phẩm của mình nè</h1>
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phi Đội Sao Băng</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
 
-<label for="quantity">Số lượng:</label>
-<input id="quantity" type="number" value="10" min="0">
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, #17264d 0%, #080d20 55%, #050711 100%);
+  color: #eef5ff;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
 
-<p>Còn <span id="stock">10</span> sản phẩm</p>
+.shell { width: min(960px, 100%); }
+
+header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+h1 {
+  font-size: clamp(22px, 4vw, 34px);
+  margin: 0;
+  letter-spacing: .04em;
+}
+
+.sub { color: #9eafd5; font-size: 13px; margin-top: 4px; }
+.stats { display: flex; gap: 10px; }
+
+.stat {
+  background: #101a35;
+  border: 1px solid #2d3d69;
+  border-radius: 12px;
+  padding: 8px 14px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.stat small {
+  display: block;
+  color: #9eafd5;
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+
+.stat b { font-size: 19px; color: #fff; }
+
+.frame {
+  position: relative;
+  border: 1px solid #354774;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 70px #0009;
+  background: #070b18;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #050916a8;
+  backdrop-filter: blur(4px);
+  text-align: center;
+  padding: 24px;
+}
+
+.overlay.hidden { display: none; }
+.card { max-width: 440px; }
+
+.card h2 {
+  font-size: clamp(28px, 6vw, 46px);
+  margin: 0 0 10px;
+  color: #7fe9ff;
+  text-shadow: 0 0 24px #22cfff66;
+}
+
+.card p { color: #c3cee8; line-height: 1.6; margin: 8px 0 20px; }
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 24px;
+  background: linear-gradient(100deg, #30d5ff, #7c7bff);
+  color: #071126;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 7px 24px #34cfff44;
+}
+
+.btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 11px;
+  color: #97a9d0;
+  font-size: 12px;
+}
+
+.key {
+  color: #d9e8ff;
+  background: #172342;
+  border: 1px solid #32456f;
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-weight: 700;
+}
+
+.touch { display: none; justify-content: center; gap: 10px; margin-top: 12px; }
+
+.touch button {
+  width: 58px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #344873;
+  background: #15213d;
+  color: white;
+  font-size: 20px;
+  touch-action: none;
+}
+
+.touch .fire { width: 86px; background: #173d57; color: #7fe9ff; }
+
+@media (max-width: 600px) {
+  header { align-items: center; }
+  .stats { gap: 5px; }
+  .stat { min-width: 65px; padding: 6px 8px; }
+  .stat b { font-size: 16px; }
+  .foot { font-size: 10px; }
+  .touch { display: flex; }
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div>
+      <h1>✦ PHI ĐỘI SAO BĂNG</h1>
+      <div class="sub">Bảo vệ thiên hà — sống sót càng lâu, điểm càng cao</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><small>ĐIỂM</small><b id="score">0000</b></div>
+      <div class="stat"><small>MẠNG</small><b id="lives">♥ ♥ ♥</b></div>
+      <div class="stat"><small>MÀN</small><b id="wave">1</b></div>
+    </div>
+  </header>
+
+  <div class="frame">
+    <canvas id="game" width="960" height="600" aria-label="Game bắn súng Phi Đội Sao Băng"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h2 id="title">SẴN SÀNG?</h2>
+        <p id="message">
+          Điều khiển phi thuyền, né đạn và bắn hạ các đợt kẻ địch.<br>
+          <span class="key">W A S D</span> /
+          <span class="key">← ↑ ↓ →</span> di chuyển ·
+          <span class="key">SPACE</span> bắn
+        </p>
+        <button class="btn" id="start">BẮT ĐẦU CHƠI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Di chuyển: <span class="key">WASD</span> hoặc <span class="key">←↑↓→</span> · Bắn: <span class="key">SPACE</span></span>
+    <span>Phím <span class="key">P</span> tạm dừng</span>
+  </div>
+
+  <div class="touch">
+    <button data-key="ArrowLeft">◀</button>
+    <button data-key="ArrowUp">▲</button>
+    <button data-key="ArrowDown">▼</button>
+    <button data-key="ArrowRight">▶</button>
+    <button class="fire" data-key="Space">BẮN</button>
+  </div>
+</main>
 
 <script>
-  const quantityInput = document.querySelector("#quantity");
-  const stockText = document.querySelector("#stock");
+(() => {
+  const c = document.querySelector("#game");
+  const ctx = c.getContext("2d");
+  const W = c.width, H = c.height;
+  const scoreEl = document.querySelector("#score");
+  const lifeEl = document.querySelector("#lives");
+  const waveEl = document.querySelector("#wave");
+  const overlay = document.querySelector("#overlay");
+  const title = document.querySelector("#title");
+  const message = document.querySelector("#message");
+  const start = document.querySelector("#start");
 
-  quantityInput.addEventListener("input", () => {
-    stockText.textContent = quantityInput.value || 0;
+  let keys = {}, player, bullets, enemies, particles, stars;
+  let score, lives, wave, spawnTick, frame = 0;
+  let running = false, paused = false, last = 0;
+
+  function reset() {
+    score = 0;
+    lives = 3;
+    wave = 1;
+    spawnTick = 0;
+    bullets = [];
+    enemies = [];
+    particles = [];
+    player = { x: W / 2, y: H - 75, r: 17, speed: 5, cool: 0, inv: 0 };
+    stars = Array.from({ length: 100 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      z: .5 + Math.random() * 2
+    }));
+    updateHUD();
+  }
+
+  function updateHUD() {
+    scoreEl.textContent = String(score).padStart(4, "0");
+    lifeEl.textContent = "♥ ".repeat(lives).trim() || "—";
+    waveEl.textContent = wave;
+  }
+
+  function shoot() {
+    if (player.cool <= 0) {
+      bullets.push({ x: player.x, y: player.y - 20, v: -9, r: 4 });
+      bullets.push({ x: player.x - 9, y: player.y - 12, v: -8.5, r: 3 });
+      bullets.push({ x: player.x + 9, y: player.y - 12, v: -8.5, r: 3 });
+      player.cool = 12;
+    }
+  }
+
+  function spawn() {
+    const tough = Math.random() < Math.min(.12 + wave * .025, .4);
+    enemies.push({
+      x: 35 + Math.random() * (W - 70),
+      y: -25,
+      r: tough ? 20 : 14,
+      hp: tough ? 3 : 1,
+      max: tough ? 3 : 1,
+      v: 1.2 + Math.random() * .8 + wave * .1,
+      t: tough ? "heavy" : "normal",
+      phase: Math.random() * 6
+    });
+  }
+
+  function burst(x, y, color, n = 12) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = Math.random() * 4 + 1;
+      particles.push({
+        x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        life: 25 + Math.random() * 18, color
+      });
+    }
+  }
+
+  function hit() {
+    if (player.inv > 0) return;
+    lives--;
+    player.inv = 90;
+    burst(player.x, player.y, "#5de4ff", 26);
+    updateHUD();
+
+    if (lives <= 0) {
+      running = false;
+      title.textContent = "PHI ĐỘI TAN VỠ";
+      message.innerHTML = `Bạn đạt <b>${score}</b> điểm và tới màn <b>${wave}</b>.<br>Nhấn nút để thử lại!`;
+      start.textContent = "CHƠI LẠI";
+      overlay.classList.remove("hidden");
+    }
+  }
+
+  function update() {
+    frame++;
+
+    for (const s of stars) {
+      s.y += s.z * 1.4;
+      if (s.y > H) {
+        s.y = 0;
+        s.x = Math.random() * W;
+      }
+    }
+
+    if (!running || paused) return;
+
+    let dx = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+    let dy = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
+
+    if (dx && dy) { dx *= .707; dy *= .707; }
+
+    player.x = Math.max(20, Math.min(W - 20, player.x + dx * player.speed));
+    player.y = Math.max(35, Math.min(H - 25, player.y + dy * player.speed));
+
+    if (keys.Space || keys.KeyJ) shoot();
+    if (player.cool > 0) player.cool--;
+    if (player.inv > 0) player.inv--;
+
+    spawnTick++;
+    if (spawnTick > Math.max(22, 65 - wave * 3)) {
+      spawn();
+      spawnTick = 0;
+    }
+
+    if (score >= wave * 250) {
+      wave++;
+      updateHUD();
+    }
+
+    for (const b of bullets) b.y += b.v;
+    bullets = bullets.filter(b => b.y > -10);
+
+    for (const e of enemies) {
+      e.y += e.v;
+      e.x += Math.sin(frame * .035 + e.phase) * .7;
+
+      if (e.y > H + 20) hit();
+
+      for (const b of bullets) {
+        if (!b.dead && Math.hypot(e.x - b.x, e.y - b.y) < e.r + b.r) {
+          b.dead = true;
+          e.hp--;
+          burst(b.x, b.y, "#ffd66b", 3);
+
+          if (e.hp <= 0) {
+            e.dead = true;
+            score += e.t === "heavy" ? 35 : 10;
+            burst(e.x, e.y, e.t === "heavy" ? "#ff8b63" : "#ffda68", e.t === "heavy" ? 20 : 12);
+            updateHUD();
+          }
+        }
+      }
+
+      if (Math.hypot(e.x - player.x, e.y - player.y) < e.r + player.r * .7) {
+        e.dead = true;
+        burst(e.x, e.y, "#ff7b8b", 12);
+        hit();
+      }
+    }
+
+    bullets = bullets.filter(b => !b.dead);
+    enemies = enemies.filter(e => !e.dead);
+
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= .97;
+      p.vy *= .97;
+      p.life--;
+    }
+
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#090f25");
+    g.addColorStop(1, "#070a17");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    for (const s of stars) {
+      ctx.globalAlpha = .25 + s.z * .27;
+      ctx.fillStyle = "#b9dcff";
+      ctx.fillRect(s.x, s.y, s.z, s.z * 2);
+    }
+    ctx.globalAlpha = 1;
+
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / 30);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, 7);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    for (const b of bullets) {
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = "#4df3ff";
+      ctx.fillStyle = "#c8fbff";
+      ctx.fillRect(b.x - 2, b.y - 8, 4, 13);
+    }
+    ctx.shadowBlur = 0;
+
+    for (const e of enemies) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.fillStyle = e.t === "heavy" ? "#ff705f" : "#c15cff";
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.beginPath();
+      ctx.moveTo(0, e.r);
+      ctx.lineTo(-e.r, e.r * .2);
+      ctx.lineTo(-e.r * .65, -e.r * .65);
+      ctx.lineTo(0, -e.r * .25);
+      ctx.lineTo(e.r * .65, -e.r * .65);
+      ctx.lineTo(e.r, e.r * .2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      if (e.max > 1) {
+        ctx.fillStyle = "#26314c";
+        ctx.fillRect(-e.r, -e.r - 8, e.r * 2, 3);
+        ctx.fillStyle = "#ffcb67";
+        ctx.fillRect(-e.r, -e.r - 8, e.r * 2 * e.hp / e.max, 3);
+      }
+      ctx.restore();
+    }
+
+    if (player) {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      if (player.inv > 0 && Math.floor(frame / 5) % 2) ctx.globalAlpha = .35;
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = "#42dfff";
+      ctx.fillStyle = "#69eaff";
+      ctx.beginPath();
+      ctx.moveTo(0, -23);
+      ctx.lineTo(17, 17);
+      ctx.lineTo(0, 10);
+      ctx.lineTo(-17, 17);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(0, -13);
+      ctx.lineTo(5, 4);
+      ctx.lineTo(-5, 4);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffb14b";
+      ctx.beginPath();
+      ctx.moveTo(-6, 16);
+      ctx.lineTo(0, 28 + Math.random() * 7);
+      ctx.lineTo(6, 16);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "#8293b8";
+    ctx.font = "12px system-ui";
+    ctx.fillText("✦  THIÊN HÀ ORION", 18, 25);
+
+    if (paused && running) {
+      ctx.fillStyle = "#061020aa";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#8eeeff";
+      ctx.font = "bold 38px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("TẠM DỪNG", W / 2, H / 2);
+      ctx.textAlign = "left";
+    }
+  }
+
+  function loop(t) {
+    if (t - last > 16) {
+      update();
+      draw();
+      last = t;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function begin() {
+    reset();
+    running = true;
+    paused = false;
+    overlay.classList.add("hidden");
+  }
+
+  start.onclick = begin;
+
+  addEventListener("keydown", e => {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+      e.preventDefault();
+    }
+    keys[e.code] = true;
+    if (e.code === "KeyP" && running) paused = !paused;
+    if (e.code === "Enter" && !running) begin();
   });
+
+  addEventListener("keyup", e => keys[e.code] = false);
+
+  document.querySelectorAll(".touch button").forEach(button => {
+    const key = button.dataset.key;
+    button.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      keys[key] = true;
+      button.setPointerCapture(e.pointerId);
+    });
+
+    for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) {
+      button.addEventListener(eventName, () => keys[key] = false);
+    }
+  });
+
+  reset();
+  requestAnimationFrame(loop);
+})();
 </script>
+</body>
+</html>
